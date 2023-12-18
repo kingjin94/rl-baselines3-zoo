@@ -3,7 +3,7 @@ import glob
 import importlib
 import os
 from copy import deepcopy
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Type, TypeVar, Union
 
 import gymnasium as gym
 import stable_baselines3 as sb3  # noqa: F401
@@ -489,3 +489,26 @@ def get_model_path(
         raise ValueError(f"No model found for {algo} on {env_name}, path: {model_path}")
 
     return name_prefix, model_path, log_path
+
+
+KeyType = TypeVar('KeyType')
+
+
+def deep_update(mapping: Dict[KeyType, Any], *updating_mappings: Dict[KeyType, Any]) -> Dict[KeyType, Any]:
+    """
+    Deep update for dict from pydantic.utils
+
+    Uses update recursively on all sub-dicts.
+
+    :source: https://github.com/pydantic/pydantic/blob/fd2991fe6a73819b48c906e3c3274e8e47d0f761/pydantic/utils.py#L200
+    :license: MIT
+    :copyright: 2017 to present Pydantic Services Inc. and individual contributors.
+    """
+    updated_mapping = mapping.copy()
+    for updating_mapping in updating_mappings:
+        for k, v in updating_mapping.items():
+            if k in updated_mapping and isinstance(updated_mapping[k], dict) and isinstance(v, dict):
+                updated_mapping[k] = deep_update(updated_mapping[k], v)
+            else:
+                updated_mapping[k] = v
+    return updated_mapping
